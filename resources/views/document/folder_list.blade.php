@@ -13,7 +13,7 @@
                         <x-input-error :messages="$errors->get('folder_name')" class="mt-2" />
                     </div>
                     <button class=" btn btn-accent btn-sm">
-                        {{ __('Add Folder') }}
+                        {{ __('Add New Folder') }}
                     </button>
                 </form>
             </div>
