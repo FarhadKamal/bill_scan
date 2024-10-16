@@ -20,6 +20,7 @@ Route::get('/', function () {
     return redirect('document');
 });
 Route::middleware(['auth', 'role:admin'])->get('/folder', [FileUploadController::class,'folderList'])->name('folder');
+Route::post('/folder/add', [FileUploadController::class, 'addFolder'])->name('folder.add');
 Route::put('/folders/{id}', [FileUploadController::class, 'update'])->name('folders.update');
 
 Route::get('/document', [FileUploadController::class, 'index'])->middleware(['auth', 'verified'])->name('document');
