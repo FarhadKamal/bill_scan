@@ -1,5 +1,25 @@
 <x-app-layout>
 
+
+    <div class="">
+        <div class=" flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
+
+
+            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
+                <form action="{{ route('folder.add') }}" method="POST" class="flex items-center justify-center space-x-3">
+                    <div >
+
+                        <x-text-input id="folder" class="block mt-1 w-full" type="text" name="folder_name" :value="old('folder_name')" required autofocus autocomplete="folder_name" />
+                        <x-input-error :messages="$errors->get('folder_name')" class="mt-2" />
+                    </div>
+                    <button class=" btn btn-accent btn-sm">
+                        {{ __('Add Folder') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
     <div class="relative overflow-x-auto container mx-auto my-5">
 
 

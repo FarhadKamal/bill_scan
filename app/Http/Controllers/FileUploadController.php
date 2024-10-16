@@ -23,6 +23,11 @@ class FileUploadController extends Controller
         return view('document.index');
     }
 
+    public function addFolder(Request $request)
+    {
+        dd($request->folder_name);
+    }
+
     public function folderList()
     {
         $this->getSubfolders();
