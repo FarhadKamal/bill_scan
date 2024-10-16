@@ -25,10 +25,23 @@ class FileUploadController extends Controller
 
     public function addFolder(Request $request)
     {
-        dd($request->folder_name);
-        dd($request->folder_name);
 
-        return back()->with('success',"add Success");
+        $request->validate([
+            'folder_name' => 'required|string|max:255',
+        ]);
+
+        $disk = Storage::disk('ftp');
+        $folderName = $request->folder_name;
+
+        if ($disk->exists($folderName)) {
+            return redirect()->back()->with('error', "Folder '$folderName' already exists.");
+        }
+
+        if ($disk->makeDirectory($folderName)) {
+            return redirect()->back()->with('success', "Folder '$folderName' created successfully.");
+        } else {
+            return redirect()->back()->with('error', "Failed to create folder '$folderName.");
+        }
     }
 
     public function folderList()
@@ -36,27 +49,27 @@ class FileUploadController extends Controller
         $this->getSubfolders();
         $folderList = FolderStore::orderByDesc("status")->paginate(15);
 
-        return view('document.folder_list',compact('folderList'));
+        return view('document.folder_list', compact('folderList'));
     }
 
     public function update(Request $request, $id)
-{
-    // Validate the request
-    $request->validate([
-        'status' => 'nullable|boolean', // Make sure status is boolean
-    ]);
+    {
+        // Validate the request
+        $request->validate([
+            'status' => 'nullable|boolean', // Make sure status is boolean
+        ]);
 
-    // Find the folder and update its status
-    $folder = FolderStore::findOrFail($id);
-    $folder->status = $request->has('status') ? 1 : 0; // Check if status is sent
-    $folder->save();
+        // Find the folder and update its status
+        $folder = FolderStore::findOrFail($id);
+        $folder->status = $request->has('status') ? 1 : 0; // Check if status is sent
+        $folder->save();
 
-    return redirect()->back()->with('success', 'Folder status updated successfully!');
-}
+        return redirect()->back()->with('success', 'Folder status updated successfully!');
+    }
 
     public function uploadGet()
     {
-        $subfolders = FolderStore::where('status',1)->orderByDesc('id')->pluck('folder_name');
+        $subfolders = FolderStore::where('status', 1)->orderByDesc('id')->pluck('folder_name');
         // $subfolders = $this->getSubfolders();
         return view('upload', compact('subfolders'));
     }
@@ -88,7 +101,7 @@ class FileUploadController extends Controller
                 } elseif ($fileExtension === 'pdf') {
                     return '<a href="' . route('files.download', ['fiename' => basename($filePath)]) . '" download target="_blank">Download PDF</a>';
                 } elseif (in_array($fileExtension, ['doc', 'docx'])) {
-                    return '<a href="' . route('files.download', ['filename' => basename($filePath)]) . '" download target="_blank">'.$filePath.'</a>';
+                    return '<a href="' . route('files.download', ['filename' => basename($filePath)]) . '" download target="_blank">' . $filePath . '</a>';
                 } else {
                     return 'Unsupported file type';
                 }
@@ -290,21 +303,21 @@ class FileUploadController extends Controller
     }
 
     private function insertFolder($folderName)
-{
-    // Check if the subfolder already exists in the database
-    $existingFolder = DB::table('folder_stores')->where('folder_name', $folderName)->first();
+    {
+        // Check if the subfolder already exists in the database
+        $existingFolder = DB::table('folder_stores')->where('folder_name', $folderName)->first();
 
-    if (!$existingFolder) {
-        // Insert the new subfolder
-        DB::table('folder_stores')->insert([
-            'folder_name' => $folderName,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    } else {
-        Log::info("Subfolder '{$folderName}' already exists in the database.");
+        if (!$existingFolder) {
+            // Insert the new subfolder
+            DB::table('folder_stores')->insert([
+                'folder_name' => $folderName,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } else {
+            Log::info("Subfolder '{$folderName}' already exists in the database.");
+        }
     }
-}
 
     public function download($filename)
     {

@@ -7,6 +7,7 @@
 
             <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
                 <form action="{{ route('folder.add') }}" method="POST" class="flex items-center justify-center space-x-3">
+                    @csrf
                     <div >
 
                         <x-text-input id="folder" class="block mt-1 w-full" type="text" name="folder_name" :value="old('folder_name')" required autofocus autocomplete="folder_name" />
