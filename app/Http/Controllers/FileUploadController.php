@@ -26,6 +26,9 @@ class FileUploadController extends Controller
     public function addFolder(Request $request)
     {
         dd($request->folder_name);
+        dd($request->folder_name);
+
+        return back()->with('success',"add Success");
     }
 
     public function folderList()
