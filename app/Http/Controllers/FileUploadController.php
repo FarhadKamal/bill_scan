@@ -25,7 +25,23 @@ class FileUploadController extends Controller
 
     public function addFolder(Request $request)
     {
-        dd($request->folder_name);
+
+        $request->validate([
+            'folder_name' => 'required|string|max:255',
+        ]);
+
+        $disk = Storage::disk('ftp');
+        $folderName = $request->folder_name;
+
+        if ($disk->exists($folderName)) {
+            return redirect()->back()->with('error', "Folder '$folderName' already exists.");
+        }
+
+        if ($disk->makeDirectory($folderName)) {
+            return redirect()->back()->with('success', "Folder '$folderName' created successfully.");
+        } else {
+            return redirect()->back()->with('error', "Failed to create folder '$folderName.");
+        }
     }
 
     public function folderList()
@@ -33,29 +49,38 @@ class FileUploadController extends Controller
         $this->getSubfolders();
         $folderList = FolderStore::orderByDesc("status")->paginate(15);
 
-        return view('document.folder_list',compact('folderList'));
+        return view('document.folder_list', compact('folderList'));
     }
 
     public function update(Request $request, $id)
-{
-    // Validate the request
-    $request->validate([
-        'status' => 'nullable|boolean', // Make sure status is boolean
-    ]);
+    {
+        // Validate the request
+        $request->validate([
+            'status' => 'nullable|boolean', // Make sure status is boolean
+        ]);
 
-    // Find the folder and update its status
-    $folder = FolderStore::findOrFail($id);
-    $folder->status = $request->has('status') ? 1 : 0; // Check if status is sent
-    $folder->save();
+        // Find the folder and update its status
+        $folder = FolderStore::findOrFail($id);
+        $folder->status = $request->has('status') ? 1 : 0; // Check if status is sent
+        $folder->save();
 
-    return redirect()->back()->with('success', 'Folder status updated successfully!');
-}
+        return redirect()->back()->with('success', 'Folder status updated successfully!');
+    }
 
     public function uploadGet()
     {
-        $subfolders = FolderStore::where('status',1)->orderByDesc('id')->pluck('folder_name');
+        $successMessage = null;
+
+
+    if (session()->has('serial') && (now()->timestamp - session()->get('success_time') <= 20)) {
+        $successMessage = session()->get('serial');
+    } else {
+
+        session()->forget(['serial', 'success_time']);
+    }
+        $subfolders = FolderStore::where('status', 1)->orderByDesc('id')->pluck('folder_name');
         // $subfolders = $this->getSubfolders();
-        return view('upload', compact('subfolders'));
+        return view('upload', compact('subfolders','successMessage'));
     }
 
 
@@ -80,14 +105,11 @@ class FileUploadController extends Controller
 
 
                 if (in_array($fileExtension, ['jpg', 'jpeg', 'png', 'gif'])) {
-                    // return '<a href="files/view/' . $filePath . '" target="_blank"><img src="files/view/' . $filePath . '" alt="File" style="width:50px; height:50px; border-radius:5px;"></a>';
+                    // Return a link to view the image
                     return '<a href="files/view/' . $filePath . '" target="_blank">' . $filePath . '</a>';
-                } elseif ($fileExtension === 'pdf') {
-                    return '<a href="' . route('files.download', ['fiename' => basename($filePath)]) . '" download target="_blank">Download PDF</a>';
-                } elseif (in_array($fileExtension, ['doc', 'docx'])) {
-                    return '<a href="' . route('files.download', ['filename' => basename($filePath)]) . '" download target="_blank">'.$filePath.'</a>';
                 } else {
-                    return 'Unsupported file type';
+                    // Return a download link for other file types (PDF, DOC, DOCX, etc.)
+                    return '<a href="' . route('files.download', ['filename' => basename($filePath)]) . '" download target="_blank">' . $filePath . '</a>';
                 }
             })
             ->addColumn('name', function ($document) {
@@ -108,8 +130,10 @@ class FileUploadController extends Controller
         $maxSize = $this->getMaxSize($extension);
 
         if ($file->getSize() > $maxSize) {
-            return back()->withErrors(['file' => 'File exceeds maximum size.']);
+            return back()->withErrors(['file' => $this->getErrorMessage($extension)]);
+
         }
+
 
         $serial = $this->generateSerialNumber();
         $timestamp = now()->format('dmy');
@@ -125,8 +149,12 @@ class FileUploadController extends Controller
             $filePath = "{$request->folder}/{$filename}";
 
             $this->logUpload($filePath, $request->remarks);
+            session()->put('serial', " Scan ID: {$filePath}");
+            session()->put('success_time', now()->timestamp);
+            return back()->with('success', "File uploaded successfully. Scan ID: {$filePath}");
 
-            return back()->with('success', "File uploaded successfully. Scan ID: {$filename}");
+            // return redirect()->route('upload', ['success' => "File uploaded successfully. Scan ID: {$filePath}", 'filePath' => $filePath]);
+            // return back()->with('success', "File uploaded successfully. Scan ID: {$filePath}")->with('filePath', $filePath);
         } catch (\Exception $e) {
             return back()->withErrors(['file' => 'Upload failed: ' . $e->getMessage()]);
         }
@@ -145,6 +173,22 @@ class FileUploadController extends Controller
                 return 2 * 1024 * 1024;
         }
     }
+
+    private function getErrorMessage($extension)
+{
+    switch ($extension) {
+        case 'jpg':
+            return "The JPG file exceeds the maximum size of 250 KB.";
+        case 'doc':
+            return  "The DOC file exceeds the maximum size of 1 MB.";
+        case 'pdf':
+            return "The DOC file exceeds the maximum size of 1 MB.";
+        case 'xlsx':
+            return "The XLSX or PDE file exceeds the maximum size of 2 MB.";
+        default:
+            return "The uploaded file exceeds the maximum allowed size.";
+    }
+}
 
     private function generateSerialNumber()
     {
@@ -287,21 +331,21 @@ class FileUploadController extends Controller
     }
 
     private function insertFolder($folderName)
-{
-    // Check if the subfolder already exists in the database
-    $existingFolder = DB::table('folder_stores')->where('folder_name', $folderName)->first();
+    {
+        // Check if the subfolder already exists in the database
+        $existingFolder = DB::table('folder_stores')->where('folder_name', $folderName)->first();
 
-    if (!$existingFolder) {
-        // Insert the new subfolder
-        DB::table('folder_stores')->insert([
-            'folder_name' => $folderName,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    } else {
-        Log::info("Subfolder '{$folderName}' already exists in the database.");
+        if (!$existingFolder) {
+            // Insert the new subfolder
+            DB::table('folder_stores')->insert([
+                'folder_name' => $folderName,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } else {
+            Log::info("Subfolder '{$folderName}' already exists in the database.");
+        }
     }
-}
 
     public function download($filename)
     {
