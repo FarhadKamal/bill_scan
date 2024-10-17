@@ -41,7 +41,7 @@ Route::middleware('auth')->get('/upload', [FileUploadController::class, 'uploadG
 
 Route::post('/upload', [FileUploadController::class, 'upload']);
 Route::get('files/view/{folder?}/{filename?}', [FileUploadController::class, 'viewFile'])->name('file.view');
-Route::get('files/download/{filename}', [FileUploadController::class, 'download'])->name('files.download');
+// Route::get('files/download/{filename}', [FileUploadController::class, 'download'])->name('files.download');
 
 
 require __DIR__ . '/auth.php';

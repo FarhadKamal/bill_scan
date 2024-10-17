@@ -109,7 +109,7 @@ class FileUploadController extends Controller
                     return '<a href="files/view/' . $filePath . '" target="_blank">' . $filePath . '</a>';
                 } else {
                     // Return a download link for other file types (PDF, DOC, DOCX, etc.)
-                    return '<a href="' . route('files.download', ['filename' => basename($filePath)]) . '" download target="_blank">' . $filePath . '</a>';
+                    return '<a href="files/view/' . $filePath . '" target="_blank">' . $filePath . '</a>';
                 }
             })
             ->addColumn('name', function ($document) {
@@ -192,7 +192,8 @@ class FileUploadController extends Controller
     private function generateSerialNumber()
     {
         $today = now()->format('dmy');
-        $currentToken = $today . Auth::user()->userid;
+        $tokenId= Auth::user()->userid=="admin"?"001":Auth::user()->userid;
+        $currentToken = $today . $tokenId;
         $lastSerial = $this->getLastSerialNumber($currentToken);
 
         $newSerial = $lastSerial + 1;
@@ -314,20 +315,19 @@ class FileUploadController extends Controller
                     return $item !== '.' && $item !== '..' && strpos($item, '.') === false;
                 });
 
-                // Get existing folders from the database
                 $existingFolders = FolderStore::pluck('folder_name')->toArray(); // Assuming 'name' is the column storing folder names
 
-                // Insert new folders and prepare to delete non-existing ones
-                foreach ($subfolders as $subfolder) {
-                    $this->insertFolder($subfolder);
-                }
 
-                // Delete folders from the database that no longer exist on the FTP server
-                $subfolderSet = array_flip($subfolders); // Create a set for quick lookup
+
+                $subfolderSet = array_flip($subfolders);
                 foreach ($existingFolders as $folderName) {
                     if (!isset($subfolderSet[$folderName])) {
                         FolderStore::where('folder_name', $folderName)->delete(); // Delete non-existing folder
                     }
+                }
+
+                foreach ($subfolders as $subfolder) {
+                    $this->insertFolder($subfolder);
                 }
 
                 ftp_close($ftpConnection);
@@ -358,23 +358,23 @@ class FileUploadController extends Controller
         }
     }
 
-    public function download($filename)
-    {
-        $filePath = 'BILL/' . $filename; // Adjust the path as needed
+    // public function download($filename)
+    // {
+    //     $filePath = 'BILL/' . $filename; // Adjust the path as needed
 
-        if (!Storage::disk('ftp')->exists($filePath)) {
-            return response()->json(['message' => 'File not found'], 404);
-        }
+    //     if (!Storage::disk('ftp')->exists($filePath)) {
+    //         return response()->json(['message' => 'File not found'], 404);
+    //     }
 
-        // Get the file content from FTP
-        $stream = Storage::disk('ftp')->get($filePath);
+    //     // Get the file content from FTP
+    //     $stream = Storage::disk('ftp')->get($filePath);
 
-        // Create a response and set the headers for download
-        return response()->stream(function () use ($stream) {
-            echo $stream;
-        }, 200, [
-            'Content-Type' => 'application/octet-stream', // Set appropriate content type
-            'Content-Disposition' => 'attachment; filename="' . basename($filePath) . '"',
-        ]);
-    }
+    //     // Create a response and set the headers for download
+    //     return response()->stream(function () use ($stream) {
+    //         echo $stream;
+    //     }, 200, [
+    //         'Content-Type' => 'application/octet-stream', // Set appropriate content type
+    //         'Content-Disposition' => 'attachment; filename="' . basename($filePath) . '"',
+    //     ]);
+    // }
 }
