@@ -315,20 +315,19 @@ class FileUploadController extends Controller
                     return $item !== '.' && $item !== '..' && strpos($item, '.') === false;
                 });
 
-                // Get existing folders from the database
                 $existingFolders = FolderStore::pluck('folder_name')->toArray(); // Assuming 'name' is the column storing folder names
 
-                // Insert new folders and prepare to delete non-existing ones
-                foreach ($subfolders as $subfolder) {
-                    $this->insertFolder($subfolder);
-                }
 
-                // Delete folders from the database that no longer exist on the FTP server
-                $subfolderSet = array_flip($subfolders); // Create a set for quick lookup
+
+                $subfolderSet = array_flip($subfolders);
                 foreach ($existingFolders as $folderName) {
                     if (!isset($subfolderSet[$folderName])) {
                         FolderStore::where('folder_name', $folderName)->delete(); // Delete non-existing folder
                     }
+                }
+
+                foreach ($subfolders as $subfolder) {
+                    $this->insertFolder($subfolder);
                 }
 
                 ftp_close($ftpConnection);

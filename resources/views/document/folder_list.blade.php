@@ -51,7 +51,7 @@
                             <form action="{{ route('folders.update', $folder->id) }}" method="POST">
                                 @csrf
                                 @method('PUT')
-                                <input type="checkbox" name="status" value="1" {{ $folder->status ? 'checked' : '' }}
+                                <input type="checkbox" class="toggle toggle-success" name="status" value="1" {{ $folder->status ? 'checked' : '' }}
                                        onchange="this.form.submit()">
                             </form>
                         </td>
