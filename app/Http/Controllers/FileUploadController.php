@@ -72,15 +72,15 @@ class FileUploadController extends Controller
         $successMessage = null;
 
 
-    if (session()->has('serial') && (now()->timestamp - session()->get('success_time') <= 20)) {
-        $successMessage = session()->get('serial');
-    } else {
+        if (session()->has('serial') && (now()->timestamp - session()->get('success_time') <= 20)) {
+            $successMessage = session()->get('serial');
+        } else {
 
-        session()->forget(['serial', 'success_time']);
-    }
+            session()->forget(['serial', 'success_time']);
+        }
         $subfolders = FolderStore::where('status', 1)->orderByDesc('id')->pluck('folder_name');
         // $subfolders = $this->getSubfolders();
-        return view('upload', compact('subfolders','successMessage'));
+        return view('upload', compact('subfolders', 'successMessage'));
     }
 
 
@@ -131,7 +131,6 @@ class FileUploadController extends Controller
 
         if ($file->getSize() > $maxSize) {
             return back()->withErrors(['file' => $this->getErrorMessage($extension)]);
-
         }
 
 
@@ -175,20 +174,20 @@ class FileUploadController extends Controller
     }
 
     private function getErrorMessage($extension)
-{
-    switch ($extension) {
-        case 'jpg':
-            return "The JPG file exceeds the maximum size of 250 KB.";
-        case 'doc':
-            return  "The DOC file exceeds the maximum size of 1 MB.";
-        case 'pdf':
-            return "The DOC file exceeds the maximum size of 1 MB.";
-        case 'xlsx':
-            return "The XLSX or PDE file exceeds the maximum size of 2 MB.";
-        default:
-            return "The uploaded file exceeds the maximum allowed size.";
+    {
+        switch ($extension) {
+            case 'jpg':
+                return "The JPG file exceeds the maximum size of 250 KB.";
+            case 'doc':
+                return  "The DOC file exceeds the maximum size of 1 MB.";
+            case 'pdf':
+                return "The DOC file exceeds the maximum size of 1 MB.";
+            case 'xlsx':
+                return "The XLSX or PDE file exceeds the maximum size of 2 MB.";
+            default:
+                return "The uploaded file exceeds the maximum allowed size.";
+        }
     }
-}
 
     private function generateSerialNumber()
     {
@@ -315,8 +314,20 @@ class FileUploadController extends Controller
                     return $item !== '.' && $item !== '..' && strpos($item, '.') === false;
                 });
 
+                // Get existing folders from the database
+                $existingFolders = FolderStore::pluck('folder_name')->toArray(); // Assuming 'name' is the column storing folder names
+
+                // Insert new folders and prepare to delete non-existing ones
                 foreach ($subfolders as $subfolder) {
                     $this->insertFolder($subfolder);
+                }
+
+                // Delete folders from the database that no longer exist on the FTP server
+                $subfolderSet = array_flip($subfolders); // Create a set for quick lookup
+                foreach ($existingFolders as $folderName) {
+                    if (!isset($subfolderSet[$folderName])) {
+                        FolderStore::where('folder_name', $folderName)->delete(); // Delete non-existing folder
+                    }
                 }
 
                 ftp_close($ftpConnection);
