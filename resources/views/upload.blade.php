@@ -7,6 +7,17 @@
             <p>{{ session('success') }}</p>
         @endif
 
+        @if ($successMessage)
+            <div class="max-w-sm mx-auto card card-compact bg-base-100 w-96 shadow-2xl p-5 my-2 ">
+                <div class="max-w-sm">
+
+                    <div>
+                        <span class=" text-pink-600 font-extrabold"> {{ $successMessage }}</span>
+                    </div>
+                </div>
+
+            </div>
+        @endif
         {{-- @if (request('success'))
             <div class="alert alert-success">
                 {{ request('success') }}
@@ -61,17 +72,7 @@
                 </div>
             </form>
         </div>
-        @if ($successMessage)
-            <div class="max-w-sm mx-auto card card-compact bg-base-100 w-96 shadow-2xl p-5 my-2 ">
-                <div class="max-w-sm">
 
-                    <div>
-                        <span class=" text-pink-600 font-extrabold"> {{ $successMessage }}</span>
-                    </div>
-                </div>
-
-            </div>
-        @endif
 
     </div>
 
