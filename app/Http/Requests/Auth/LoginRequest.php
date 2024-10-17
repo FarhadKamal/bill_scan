@@ -46,8 +46,9 @@ class LoginRequest extends FormRequest
 
         $user = User::where('email', $this->login)
         ->orWhere('userid', $this->login)
-        ->where('status', 'active')
+
         ->first();
+
 
 
         if (!($user && Hash::check($this->password, $user->password))) {
@@ -55,6 +56,13 @@ class LoginRequest extends FormRequest
 
             throw ValidationException::withMessages([
                 'login' => trans('auth.failed'),
+            ]);
+        }
+
+
+        if ($user->status == "inactive") {
+            throw ValidationException::withMessages([
+                'login' => trans('User Is Inactive', ['user' => $user->name ?? 'User']),
             ]);
         }
 
