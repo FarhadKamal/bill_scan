@@ -315,14 +315,14 @@ class FileUploadController extends Controller
                     return $item !== '.' && $item !== '..' && strpos($item, '.') === false;
                 });
 
-                $existingFolders = FolderStore::pluck('folder_name')->toArray(); // Assuming 'name' is the column storing folder names
+                $existingFolders = FolderStore::pluck('folder_name')->toArray();
 
 
 
                 $subfolderSet = array_flip($subfolders);
                 foreach ($existingFolders as $folderName) {
                     if (!isset($subfolderSet[$folderName])) {
-                        FolderStore::where('folder_name', $folderName)->delete(); // Delete non-existing folder
+                        FolderStore::where('folder_name', $folderName)->delete();
                     }
                 }
 
