@@ -19,13 +19,14 @@ class DatabaseSeeder extends Seeder
     {
         User::create(
             [
-                'name' => 'Towhidul islam',
-                'userid'=>"2843",
-                'email' => "towhidul@pedrollo.com",
+
+                'name' => 'admin',
+                'userid'=>"admin",
+                'email' => "admin@pedrollobd.com",
                 'email_verified_at' => now(),
                 'role' => 'admin',
                 'status' => "active",
-                'password' => Hash::make('2580@Admin'),
+                'password' => Hash::make('admin'),
                 'remember_token' => Str::random(10)
             ]
         );

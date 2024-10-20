@@ -4,15 +4,13 @@
 <x-app-layout>
 
     <style>
-        #users-table thead th {
-
-        }
+        #users-table thead th {}
 
 
         #users-table tbody tr .f_link {
             background-color: #ffffff;
-           color: blue;
-           font-weight: 900;
+            color: blue;
+            font-weight: 900;
 
         }
     </style>
@@ -61,10 +59,13 @@
                         render: function(data) {
                             // Format the date (assuming data is in ISO 8601 format)
                             return new Date(data).toLocaleDateString(
-                            'en-GB'); // Change 'en-GB' to your preferred locale
+                                'en-GB'); // Change 'en-GB' to your preferred locale
                         },
                         className: 'text-center'
                     },
+                ],
+                order: [
+                    [3, 'desc']
                 ]
             });
         });
