@@ -91,7 +91,7 @@ class FileUploadController extends Controller
 
         $documents = DocumentHistory::with('getByUser:userid,name');
 
-        if ($user->role === 'admin') {
+        if ($user->role == 'admin' || $user->role == 'super admin') {
             $documents = $documents->get();
         } else {
 
