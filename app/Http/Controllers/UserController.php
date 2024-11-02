@@ -9,8 +9,16 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::where('role', '<>', 'admin')->orderByDesc("id")->paginate(10);
+        // $users = User::where('role', '<>', 'admin')->orderByDesc("id")->paginate(10);
+        if (auth()->user()->role === 'super admin') {
+            // Show all users for super admin
+            $users = User::orderByDesc("id")->paginate(10);
+        } else {
+            // Exclude admin users for others
+            $users = User::whereNotIn('role', ['admin', 'super admin'])->orderByDesc("id")->paginate(10);
+        }
 
+        // return view('user.index', compact('users'));
 
         return view('user.index', compact('users'));
     }
