@@ -13,6 +13,33 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <style>
+            /* CSS for the Logo */
+.logo {
+    text-align: center;
+
+
+}
+
+.logo h6 {
+    border: 1px solid black;
+    padding: 4px;
+    font-size: 1em;              /* Adjusts the font size */
+    font-weight: bold;             /* Makes the text bold */
+    color: #112127;                /* Set a color for the text */
+    letter-spacing: 2px;           /* Adds spacing between letters */
+    font-family: 'Arial', sans-serif;
+    transition: color 0.3s ease;   /* Smooth color transition */
+}
+
+.logo h6:hover {
+    color: #1b4352;                /* Darker color on hover */
+}
+
+
+
+        </style>
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100 ">

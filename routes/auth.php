@@ -34,9 +34,9 @@ Route::middleware('guest')->group(function () {
                 ->name('password.store');
 });
 Route::get('register', [RegisteredUserController::class, 'create'])
-->name('register') ->middleware('role:admin');
+->name('register') ->middleware('role:admin,super admin');
 Route::post('register', [RegisteredUserController::class, 'store']);
-Route::middleware(['auth','role:admin'])->get('users', [UserController::class,'index'])->name('users');
+Route::middleware(['auth','role:admin,super admin'])->get('users', [UserController::class,'index'])->name('users');
 Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
